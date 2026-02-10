@@ -6,28 +6,42 @@ import 'package:family_wifi/core/network/api_constants.dart';
 import 'package:family_wifi/core/network/api_exception.dart';
 import 'package:family_wifi/core/network/persistent_io_client.dart';
 import 'package:family_wifi/core/utils/print_log_helper.dart';
+import 'package:family_wifi/core/utils/shared_preferences_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class ApiHelper {
-  late final String _host, _portAuth, _portDefault, _suffix;
+  late final String _hostDefault, _portAuth, _portDefault, _suffix;
+  String? _hostOverride;
   Map<String, String> get _headers => {'Content-Type': 'application/json'};
 
   late final PersistentIoClient client;
 
   ApiHelper() {
     if (ApiConstants.developmentMode) {
-      _host = ApiConstants.baseUrlDev;
+      _hostDefault = ApiConstants.baseUrlDev;
       _suffix = ApiConstants.suffixDev;
       _portAuth = ApiConstants.authPortDev;
       _portDefault = ApiConstants.defaultPortDev;
     } else {
-      _host = ApiConstants.baseUrl;
+      _hostDefault = ApiConstants.baseUrl;
       _suffix = ApiConstants.suffix;
       _portAuth = ApiConstants.authPort;
       _portDefault = ApiConstants.defaultPort;
     }
     initClient();
+  }
+
+  String get host => _hostOverride?.isNotEmpty == true ? _hostOverride! : _hostDefault;
+
+  void setCustomHost(String? host) {
+    final trimmed = host?.trim();
+    _hostOverride = trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  Future<void> loadCustomHost(SharedPreferencesHelper preferencesHelper) async {
+    final stored = await preferencesHelper.customServerUrl;
+    setCustomHost(stored);
   }
 
   void initClient() {
@@ -60,7 +74,7 @@ class ApiHelper {
     if (!await check()) {
       throw ApiException('out_of_coverage', isOutOfCoverage: true);
     }
-    String hostName = _host;
+    String hostName = host;
     if (path == ApiConstants.login) {
       hostName += ':${_portAuth}';
     } else {
