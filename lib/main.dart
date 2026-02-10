@@ -60,8 +60,15 @@ class MyApp extends StatelessWidget {
 
   List<SingleChildWidget> _buildProviders() {
     return [
-      Provider<ApiHelper>(create: (_) => ApiHelper()),
       Provider(create: (_) => SharedPreferencesHelper()),
+      ProxyProvider<SharedPreferencesHelper, ApiHelper>(
+        update: (_, sharedPreferencesHelper, apiHelper) {
+          final helper = apiHelper ?? ApiHelper();
+          // ignore: unawaited_futures
+          helper.loadCustomHost(sharedPreferencesHelper);
+          return helper;
+        },
+      ),
     ];
   }
 
