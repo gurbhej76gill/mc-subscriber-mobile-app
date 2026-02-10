@@ -1,6 +1,7 @@
 import 'package:family_wifi/core/network/api_helper.dart';
 import 'package:family_wifi/core/utils/alert_state_provider.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
+import 'package:family_wifi/core/utils/shared_preferences_helper.dart';
 import 'package:family_wifi/main.dart';
 import 'package:family_wifi/presentation/sign_up_screen/repository/sign_up_repository.dart';
 import 'package:family_wifi/widgets/style_helper.dart';
@@ -22,16 +23,32 @@ class SignUpScreen extends StatefulWidget {
           return signUpRepo ?? SignUpRepository(apiHelper);
         },
         child:
-            ProxyProvider3<
+            ProxyProvider5<
               LoadingStateProvider,
               AlertStateProvider,
               SignUpRepository,
+              SharedPreferencesHelper,
+              ApiHelper,
               SignUpProvider
             >(
               update:
-                  (_, loadingState, alertState, signUpRepo, signUpProvider) {
+                  (
+                    _,
+                    loadingState,
+                    alertState,
+                    signUpRepo,
+                    sharedPreferencesHelper,
+                    apiHelper,
+                    signUpProvider,
+                  ) {
                     return signUpProvider ??
-                        SignUpProvider(loadingState, alertState, signUpRepo);
+                        SignUpProvider(
+                          loadingState,
+                          alertState,
+                          signUpRepo,
+                          sharedPreferencesHelper,
+                          apiHelper,
+                        );
                   },
               child: const SignUpScreen(),
             ),
@@ -138,6 +155,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         hintText: 'MAC address of first router',
                         backgroundColor: appTheme.blue_gray_900,
                         validator: controller.validateMacAddress,
+                      ),
+                      SizedBox(height: 24.h),
+                      CustomEditText(
+                        controller: controller.customServerUrlController,
+                        hintText: 'Server URL',
+                        backgroundColor: appTheme.blue_gray_900,
+                        validator: controller.validateServerUrl,
                       ),
                     ],
                   ),

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SharedPreferencesHelper {
   static const _firstRun = 'firstRun';
   static const _accessToken = 'accessToken';
+  static const _customServerUrl = 'customServerUrl';
 
   late final SharedPreferencesAsync _sharedPreference;
 
@@ -55,6 +56,17 @@ class SharedPreferencesHelper {
       iOptions: _getIosOptions(),
     );
     return storage.delete(key: _accessToken);
+  }
+
+  Future<void> setCustomServerUrl(String value) async {
+    return _sharedPreference.setString(_customServerUrl, value);
+  }
+
+  Future<String?> get customServerUrl =>
+      _sharedPreference.getString(_customServerUrl);
+
+  Future<void> removeCustomServerUrl() async {
+    return _sharedPreference.remove(_customServerUrl);
   }
 
   void dispose() {}
