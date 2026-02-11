@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 class ApiHelper {
   late final String _hostDefault, _portAuth, _portDefault, _suffix;
   String? _hostOverride;
+  String? _portOverride;
   Map<String, String> get _headers => {'Content-Type': 'application/json'};
 
   late final PersistentIoClient client;
@@ -33,10 +34,24 @@ class ApiHelper {
   }
 
   String get host => _hostOverride?.isNotEmpty == true ? _hostOverride! : _hostDefault;
-
+  String? get portOverride => _portOverride;
   void setCustomHost(String? host) {
     final trimmed = host?.trim();
-    _hostOverride = trimmed == null || trimmed.isEmpty ? null : trimmed;
+    if (trimmed == null || trimmed.isEmpty) {
+      _hostOverride = null;
+      _portOverride = null;
+      return;
+    }
+
+    final parts = trimmed.split(':');
+    if (parts.length == 2) {
+      _hostOverride = parts[0];
+      _portOverride = parts[1];
+      return;
+    }
+
+    _hostOverride = trimmed;
+    _portOverride = null;
   }
 
   Future<void> loadCustomHost(SharedPreferencesHelper preferencesHelper) async {
@@ -75,7 +90,12 @@ class ApiHelper {
       throw ApiException('out_of_coverage', isOutOfCoverage: true);
     }
     String hostName = host;
-    if (path == ApiConstants.login) {
+    final overridePort = portOverride;
+    if (path == ApiConstants.signup &&
+        overridePort != null &&
+        overridePort.isNotEmpty) {
+      hostName += ':$overridePort';
+    } else if (path == ApiConstants.login) {
       hostName += ':${_portAuth}';
     } else {
       hostName += ':${_portDefault}';

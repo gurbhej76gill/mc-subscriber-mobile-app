@@ -71,7 +71,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     controller.loadingStateProvider.addListener(handleLoadingState);
     controller.alertStateProvider.addListener(handleAlertState);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.init();
+      controller.init().then((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     });
   }
 

@@ -18,7 +18,6 @@ class SignUpProvider with BaseBloc {
   TextEditingController operatorIdController = TextEditingController();
   TextEditingController macAddressController = TextEditingController();
   TextEditingController customServerUrlController = TextEditingController();
-
   late final SignUpRepository _repository;
   late final SharedPreferencesHelper _sharedPreferencesHelper;
   late final ApiHelper _apiHelper;
@@ -48,7 +47,8 @@ class SignUpProvider with BaseBloc {
         ApiConstants.developmentMode
             ? ApiConstants.baseUrlDev
             : ApiConstants.baseUrl;
-    final serverUrl = storedServerUrl?.trim();
+    String? serverUrl = storedServerUrl?.trim();
+
     customServerUrlController.text =
         serverUrl == null || serverUrl.isEmpty ? defaultServerUrl : serverUrl;
     _apiHelper.setCustomHost(customServerUrlController.text.trim());
@@ -93,13 +93,47 @@ class SignUpProvider with BaseBloc {
     if (trimmed.isEmpty) {
       return 'Server URL is required';
     }
-    if (trimmed.contains('://') || trimmed.contains('/') || trimmed.contains(':')) {
-      return 'Enter server URL like openwifi3.routerarchitects.com';
+
+    if (trimmed.contains('://') ||
+        trimmed.contains('/') ||
+        trimmed.contains('?') ||
+        trimmed.contains('#')) {
+      return 'Enter hostname or hostname:port only';
     }
+
+    final normalized = _normalizeServerUrl(trimmed);
+    if (normalized.isEmpty) {
+      return 'Enter a valid hostname';
+    }
+
+    final parts = normalized.split(':');
+    if (parts.length > 2) {
+      return 'Enter hostname or hostname:port only';
+    }
+
+    final host = parts[0];
+    final port = parts.length == 2 ? parts[1] : null;
+
+    if (host.isEmpty) {
+      return 'Enter a valid hostname';
+    }
+
     final hostRegex = RegExp(r'^[A-Za-z0-9.-]+$');
-    if (!hostRegex.hasMatch(trimmed) || !trimmed.contains('.')) {
-      return 'Enter a valid server URL';
+    final fqdnRegex =
+        RegExp(r'^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$');
+    final isFqdn = hostRegex.hasMatch(host) && fqdnRegex.hasMatch(host);
+
+    if (!isFqdn) {
+      return 'Enter a valid fully qualified domain name';
     }
+
+    if (port != null) {
+      final portNumber = int.tryParse(port);
+      if (portNumber == null || portNumber < 1 || portNumber > 65535) {
+        return 'Enter a valid port (1-65535)';
+      }
+    }
+
     return null;
   }
 
@@ -126,7 +160,6 @@ class SignUpProvider with BaseBloc {
       final normalizedServerUrl = _normalizeServerUrl(
         customServerUrlController.text,
       );
-      signUpModel.serverUrl = normalizedServerUrl;
       await _sharedPreferencesHelper.setCustomServerUrl(normalizedServerUrl);
       _apiHelper.setCustomHost(normalizedServerUrl);
 
