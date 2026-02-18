@@ -138,7 +138,7 @@ class _DashboardOverviewTabState extends State<DashboardOverviewTab>
 
   Widget _buildAddMeshDeviceButton() {
     return CustomButton(
-      text: 'Add another mesh device',
+      text: 'Add another device',
       onPressed: () async {
         bool? deviceAdded = await NavigatorService.pushNamed(
           AppRoutes.addDeviceSetupScreen,

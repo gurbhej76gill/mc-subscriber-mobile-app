@@ -19,11 +19,10 @@ class SignUpRepository {
   Future<Result> createAccount(SignUpModel signUpModel) async {
     try {
       Map<String, dynamic> result = await _apiHelper.request(
-        ApiConstants.signup,
+        ApiConstants.subscriber,
         requestType: RequestType.POST,
         parameters: {
           'email': signUpModel.email,
-          'macAddress': signUpModel.macAddress,
           'registrationId': signUpModel.operatorId,
         },
       );
