@@ -16,7 +16,6 @@ class SignUpProvider with BaseBloc {
   SignUpModel signUpModel = SignUpModel();
   TextEditingController emailController = TextEditingController();
   TextEditingController operatorIdController = TextEditingController();
-  TextEditingController macAddressController = TextEditingController();
   TextEditingController customServerUrlController = TextEditingController();
   late final SignUpRepository _repository;
   late final SharedPreferencesHelper _sharedPreferencesHelper;
@@ -36,7 +35,6 @@ class SignUpProvider with BaseBloc {
   void dispose() {
     emailController.dispose();
     operatorIdController.dispose();
-    macAddressController.dispose();
     customServerUrlController.dispose();
     super.dispose();
   }
@@ -70,19 +68,6 @@ class SignUpProvider with BaseBloc {
   String? validateOperatorId(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Operator ID is required';
-    }
-
-    return null;
-  }
-
-  String? validateMacAddress(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'MAC address is required';
-    }
-
-    final macRegex = RegExp(r'^([0-9a-f]{2}[:-]){5}([0-9A-Fa-f]{2})$');
-    if (!macRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid MAC address';
     }
 
     return null;
@@ -151,11 +136,6 @@ class SignUpProvider with BaseBloc {
     try {
       signUpModel.email = emailController.text.trim();
       signUpModel.operatorId = operatorIdController.text.trim();
-
-      RegExp specialChars = RegExp(r'[^\w]+');
-      signUpModel.macAddress = macAddressController.text
-          .replaceAll(specialChars, '')
-          .toLowerCase();
 
       final normalizedServerUrl = _normalizeServerUrl(
         customServerUrlController.text,
