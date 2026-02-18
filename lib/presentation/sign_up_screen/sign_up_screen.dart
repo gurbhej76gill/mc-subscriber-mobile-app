@@ -134,7 +134,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       SizedBox(height: 19.h),
                       Text(
-                        'Enter your email address, operator ID, and the MAC address of your first router.',
+                        'Enter your email address and operator ID.',
                         style: TextStyleHelper.instance.title16RegularInter
                             .copyWith(color: appTheme.white_A700),
                       ),
@@ -152,13 +152,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         hintText: 'Operator ID',
                         backgroundColor: appTheme.blue_gray_900,
                         validator: controller.validateOperatorId,
-                      ),
-                      SizedBox(height: 24.h),
-                      CustomEditText(
-                        controller: controller.macAddressController,
-                        hintText: 'MAC address of first router',
-                        backgroundColor: appTheme.blue_gray_900,
-                        validator: controller.validateMacAddress,
                       ),
                       SizedBox(height: 24.h),
                       CustomEditText(
