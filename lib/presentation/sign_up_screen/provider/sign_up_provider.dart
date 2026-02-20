@@ -149,6 +149,10 @@ class SignUpProvider with BaseBloc {
       if (result.isSuccess) {
         NavigatorService.popAndPushNamed(
           AppRoutes.passwordResetConfirmationScreenTwo,
+          arguments: {
+            'email': signUpModel.email,
+            'registrationId': signUpModel.operatorId,
+          },
         );
       } else {
         showAlert(result.message, title: await 'signup_failed'.tr());
