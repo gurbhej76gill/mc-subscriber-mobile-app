@@ -56,29 +56,11 @@ class HomeProvider with BaseBloc {
   }
 
   Future<void> fetchLatestData({bool showPopupLoader = true}) async {
-    await initialSubscribe(showPopupLoader: showPopupLoader);
-    if (subscriberInfo.value != null) {
-      fetchTopologyInfo();
-    }
+    await fetchTopologyInfo();
   }
 
   Future<void> initialSubscribe({bool showPopupLoader = true}) async {
-    if (showPopupLoader) startLoading();
-
-    try {
-      Result result = await _repository.subscriber();
-
-      if (showPopupLoader) dismissLoading();
-      if (result.isSuccess) {
-        subscriberInfo.value = result.message;
-      } else if (result.sessionExpired) {
-        NavigatorService.pushNamedAndRemoveUntil(AppRoutes.loginScreen);
-      } else {
-        showAlert(result.message, title: await 'subscribe_failed'.tr());
-      }
-    } catch (error) {
-      dismissLoading();
-    }
+    return;
   }
 
   Future<void> fetchTopologyInfo() async {
