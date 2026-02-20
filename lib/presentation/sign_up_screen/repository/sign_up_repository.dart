@@ -16,15 +16,20 @@ class SignUpRepository {
     this._apiHelper = apiHelper;
   }
 
-  Future<Result> createAccount(SignUpModel signUpModel) async {
+  Future<Result> createAccount(SignUpModel signUpModel, {bool resend = false})
+      async {
     try {
+      final parameters = <String, dynamic>{
+        'email': signUpModel.email,
+        'registrationId': signUpModel.operatorId,
+      };
+      if (resend) {
+        parameters['resend'] = 'true';
+      }
       Map<String, dynamic> result = await _apiHelper.request(
         ApiConstants.subscriber,
         requestType: RequestType.POST,
-        parameters: {
-          'email': signUpModel.email,
-          'registrationId': signUpModel.operatorId,
-        },
+        parameters: parameters,
       );
       SignUpResult signUpResult = SignUpResult.fromJson(result);
       if (signUpResult.userId != null) {
