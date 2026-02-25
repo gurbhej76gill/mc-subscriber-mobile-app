@@ -68,7 +68,15 @@ class HomeProvider with BaseBloc {
       Result result = await _repository.topology();
 
       if (result.isSuccess) {
-        topologyInfo.value = result.message;
+        final TopologyInfo? topology = result.message;
+        if (topology == null || (topology.nodes?.isEmpty ?? true)) {
+          topologyInfo.value = null;
+          showAlert(
+            await 'no_devices_activated_yet'.tr(),
+          );
+          return;
+        }
+        topologyInfo.value = topology;
       } else if (result.sessionExpired) {
         NavigatorService.pushNamedAndRemoveUntil(AppRoutes.loginScreen);
       } else {
