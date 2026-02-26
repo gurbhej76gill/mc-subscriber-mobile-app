@@ -29,11 +29,9 @@ class EditNetworkRepository {
         ApiConstants.action,
         requestType: RequestType.POST,
         parameters: {'action': ApiConstants.actionConfigure},
-        requestBody: ConfigurePayload(
-          editNetworkItem: EditNetworkItem(
-            name: editNetworkModel.ssid,
-            password: editNetworkModel.password,
-          ),
+        requestBody: ConfigurePayload.forSsidEdit(
+          ssid: editNetworkModel.ssid ?? '',
+          password: editNetworkModel.password,
         ),
       );
       if (result['Code'] != null) {
