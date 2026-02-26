@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_export.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_icon_button.dart';
+import 'package:family_wifi/l10n/app_localization_extension.dart';
 import '../models/mobile_device_info_model.dart';
 
 class MobileDeviceItemView extends StatelessWidget {
@@ -69,16 +70,26 @@ class MobileDeviceItemView extends StatelessWidget {
               ),
             )
           else
-            CustomButton(
-              width: 84.0,
-              text: device.isPaused ? 'Resume' : 'Pause',
-              onPressed: onPauseTap,
-              backgroundColor: device.isHistoricalDevice
-                  ? Colors.grey
-                  : appTheme.blue_gray_900,
-              fontSize: 14.fSize,
-              fontWeight: FontWeight.w500,
-              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            FutureBuilder<String>(
+              future:
+                  (device.isPaused ? 'resume_action' : 'pause_action').tr(),
+              initialData: '',
+              builder: (context, snapshot) {
+                return CustomButton(
+                  width: 84.0,
+                  text: snapshot.data ?? '',
+                  onPressed: onPauseTap,
+                  backgroundColor: device.isHistoricalDevice
+                      ? Colors.grey
+                      : appTheme.blue_gray_900,
+                  fontSize: 14.fSize,
+                  fontWeight: FontWeight.w500,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                );
+              },
             ),
         ],
       ),

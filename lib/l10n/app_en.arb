@@ -29,6 +29,8 @@
   "remove_device_failed": "Failed to remove device",
   "pause_device_success": "Device paused successfully",
   "pause_device_error": "Failed to pause device",
+  "pause_action": "Pause",
   "resume_device_success": "Device resumed successfully",
-  "resume_device_error": "Failed to resume device"
+  "resume_device_error": "Failed to resume device",
+  "resume_action": "Resume"
 }
