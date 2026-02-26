@@ -4,14 +4,13 @@ import 'package:family_wifi/core/network/result.dart';
 import 'package:family_wifi/core/utils/alert_state_provider.dart';
 import 'package:family_wifi/core/utils/base_bloc.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
-import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/core/utils/streamer.dart';
+import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/l10n/app_localization_extension.dart';
 import 'package:family_wifi/presentation/device_management_screen/models/router_device_info_model.dart';
 import 'package:family_wifi/presentation/device_management_screen/repository/device_management_repository.dart';
 import 'package:family_wifi/presentation/home_screen/models/topology_info.dart';
 import 'package:family_wifi/routes/app_routes.dart';
-import 'package:family_wifi/theme/theme_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../models/mobile_device_info_model.dart';
@@ -135,57 +134,51 @@ class DeviceManagementProvider with BaseBloc {
     }
   }
 
-  Future<void> toggleDevicePause(
+  Future<ToggleDevicePauseOutcome> toggleDevicePause(
     MobileDeviceInfoModel device,
-    BuildContext context,
   ) async {
     device.isPauseResumeInProgress = true;
     _mobileDevices.value = List.of(_mobileDevices.value);
+    final wasPaused = device.isPaused;
 
     try {
       Result result = await _repository.pauseResumeDevice(
         device.macAddress,
-        !device.isPaused,
+        !wasPaused,
       );
 
       if (result.isSuccess) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              await (device.isPaused
-                      ? 'resume_device_success'
-                      : 'pause_device_success')
-                  .tr(),
-            ),
-            backgroundColor: appTheme.colorFF4CAF,
-          ),
-        );
         device.isPauseResumeInProgress = false;
-        device.isPaused = !device.isPaused;
+        device.isPaused = !wasPaused;
         _mobileDevices.value = List.of(_mobileDevices.value);
+        return ToggleDevicePauseOutcome.success(
+          messageKey:
+              wasPaused ? 'resume_device_success' : 'pause_device_success',
+          isPaused: device.isPaused,
+        );
       } else if (result.sessionExpired) {
-        NavigatorService.pushNamedAndRemoveUntil(AppRoutes.loginScreen);
-      } else {
-        showAlert(
-          result.message,
-          title:
-              await (device.isPaused
-                      ? 'resume_device_error'
-                      : 'pause_device_error')
-                  .tr(),
-        );
         device.isPauseResumeInProgress = false;
         _mobileDevices.value = List.of(_mobileDevices.value);
+        return const ToggleDevicePauseOutcome.sessionExpired();
+      } else {
+        device.isPauseResumeInProgress = false;
+        _mobileDevices.value = List.of(_mobileDevices.value);
+        return ToggleDevicePauseOutcome.error(
+          message: result.message?.toString(),
+          messageKey:
+              wasPaused ? 'resume_device_error' : 'pause_device_error',
+        );
       }
     } catch (error) {
-      showAlert(await 'failed'.tr(), title: await 'something_went_wrong'.tr());
-
       device.isPauseResumeInProgress = false;
       _mobileDevices.value = List.of(_mobileDevices.value);
 
       // Handle error
       print('Toggle Device Pause error: $error');
+      return const ToggleDevicePauseOutcome.error(
+        messageKey: 'failed',
+        titleKey: 'something_went_wrong',
+      );
     }
   }
 
@@ -245,6 +238,51 @@ class DeviceManagementProvider with BaseBloc {
     _mobileDevices.close();
     _routerDevices.close();
   }
+}
+
+enum ToggleDevicePauseStatus { success, error, sessionExpired }
+
+class ToggleDevicePauseOutcome {
+  final ToggleDevicePauseStatus status;
+  final String? messageKey;
+  final String? titleKey;
+  final String? message;
+  final bool? isPaused;
+
+  const ToggleDevicePauseOutcome._({
+    required this.status,
+    this.messageKey,
+    this.titleKey,
+    this.message,
+    this.isPaused,
+  });
+
+  const ToggleDevicePauseOutcome.sessionExpired()
+      : this._(status: ToggleDevicePauseStatus.sessionExpired);
+
+  const ToggleDevicePauseOutcome.success({
+    required String messageKey,
+    bool? isPaused,
+  }) : this._(
+          status: ToggleDevicePauseStatus.success,
+          messageKey: messageKey,
+          isPaused: isPaused,
+        );
+
+  const ToggleDevicePauseOutcome.error({
+    String? message,
+    String? messageKey,
+    String? titleKey,
+  }) : this._(
+          status: ToggleDevicePauseStatus.error,
+          message: message,
+          messageKey: messageKey,
+          titleKey: titleKey,
+        );
+
+  bool get isSuccess => status == ToggleDevicePauseStatus.success;
+  bool get isError => status == ToggleDevicePauseStatus.error;
+  bool get isSessionExpired => status == ToggleDevicePauseStatus.sessionExpired;
 }
 
 extension IterableExtension on Iterable {
