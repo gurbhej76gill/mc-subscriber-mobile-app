@@ -137,9 +137,11 @@ class DeviceManagementProvider with BaseBloc {
   Future<ToggleDevicePauseOutcome> toggleDevicePause(
     MobileDeviceInfoModel device,
   ) async {
-    device.isPauseResumeInProgress = true;
-    _mobileDevices.value = List.of(_mobileDevices.value);
     final wasPaused = device.isPaused;
+    _updateMobileDevice(
+      device.macAddress,
+      device.copyWith(isPauseResumeInProgress: true),
+    );
 
     try {
       Result result = await _repository.pauseResumeDevice(
@@ -148,21 +150,29 @@ class DeviceManagementProvider with BaseBloc {
       );
 
       if (result.isSuccess) {
-        device.isPauseResumeInProgress = false;
-        device.isPaused = !wasPaused;
-        _mobileDevices.value = List.of(_mobileDevices.value);
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(
+            isPauseResumeInProgress: false,
+            isPaused: !wasPaused,
+          ),
+        );
         return ToggleDevicePauseOutcome.success(
           messageKey:
               wasPaused ? 'resume_device_success' : 'pause_device_success',
-          isPaused: device.isPaused,
+          isPaused: !wasPaused,
         );
       } else if (result.sessionExpired) {
-        device.isPauseResumeInProgress = false;
-        _mobileDevices.value = List.of(_mobileDevices.value);
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(isPauseResumeInProgress: false),
+        );
         return const ToggleDevicePauseOutcome.sessionExpired();
       } else {
-        device.isPauseResumeInProgress = false;
-        _mobileDevices.value = List.of(_mobileDevices.value);
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(isPauseResumeInProgress: false),
+        );
         return ToggleDevicePauseOutcome.error(
           message: result.message?.toString(),
           messageKey:
@@ -170,8 +180,10 @@ class DeviceManagementProvider with BaseBloc {
         );
       }
     } catch (error) {
-      device.isPauseResumeInProgress = false;
-      _mobileDevices.value = List.of(_mobileDevices.value);
+      _updateMobileDevice(
+        device.macAddress,
+        device.copyWith(isPauseResumeInProgress: false),
+      );
 
       // Handle error
       print('Toggle Device Pause error: $error');
@@ -180,6 +192,20 @@ class DeviceManagementProvider with BaseBloc {
         titleKey: 'something_went_wrong',
       );
     }
+  }
+
+  void _updateMobileDevice(String macAddress, MobileDeviceInfoModel updated) {
+    if (!_mobileDevices.hasValue || _mobileDevices.value == null) {
+      return;
+    }
+    final current = _mobileDevices.value;
+    final index = current.indexWhere((item) => item.macAddress == macAddress);
+    if (index == -1) {
+      return;
+    }
+    final next = List<MobileDeviceInfoModel>.of(current);
+    next[index] = updated;
+    _mobileDevices.value = next;
   }
 
   Future<bool> handleRouterMeshDelete(int indexToDelete) async {
