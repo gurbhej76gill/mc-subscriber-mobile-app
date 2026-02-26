@@ -108,7 +108,7 @@ Client _$ClientFromJson(Map<String, dynamic> json) => Client(
   fingerprint: json['fingerprint'] as String?,
   rxSpeed: (json['rx_speed'] as num?)?.toDouble() ?? 0,
   txSpeed: (json['tx_speed'] as num?)?.toDouble() ?? 0,
-  blocked: json['blocked'] as String?,
+  blockedRaw: json['blocked'],
 );
 
 Map<String, dynamic> _$ClientToJson(Client instance) => <String, dynamic>{
@@ -122,5 +122,5 @@ Map<String, dynamic> _$ClientToJson(Client instance) => <String, dynamic>{
   'fingerprint': instance.fingerprint,
   'rx_speed': instance.rxSpeed,
   'tx_speed': instance.txSpeed,
-  'blocked': instance.blocked,
+  'blocked': instance.blockedRaw,
 };
