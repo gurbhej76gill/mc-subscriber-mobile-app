@@ -241,7 +241,7 @@ class DeviceManagementProvider with BaseBloc {
           .replaceAll(specialChars, '')
           .toLowerCase();
 
-      Result result = await _repository!.deleteDevice(macAddressFormatted);
+      Result result = await _repository.deleteDevice(macAddressFormatted);
       dismissLoading();
 
       if (result.isSuccess) {
