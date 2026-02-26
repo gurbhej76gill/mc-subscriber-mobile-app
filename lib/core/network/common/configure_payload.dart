@@ -11,6 +11,26 @@ class ConfigurePayload {
 
   ConfigurePayload({this.editNetworkItem, this.clientItems});
 
+  factory ConfigurePayload.forClientPause({
+    required String macAddress,
+    required bool pause,
+  }) {
+    return ConfigurePayload(
+      clientItems: [
+        ClientItem(mac: macAddress, access: pause ? 'deny' : 'allow'),
+      ],
+    );
+  }
+
+  factory ConfigurePayload.forSsidEdit({
+    required String ssid,
+    String? password,
+  }) {
+    return ConfigurePayload(
+      editNetworkItem: EditNetworkItem(name: ssid, password: password),
+    );
+  }
+
   factory ConfigurePayload.fromJson(Map<String, dynamic> json) =>
       _$ConfigurePayloadFromJson(json);
   Map<String, dynamic> toJson() => _$ConfigurePayloadToJson(this);

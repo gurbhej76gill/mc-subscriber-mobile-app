@@ -42,10 +42,9 @@ class DeviceManagementRepository {
         ApiConstants.action,
         requestType: RequestType.POST,
         parameters: {'action': ApiConstants.actionConfigure},
-        requestBody: ConfigurePayload(
-          clientItems: [
-            ClientItem(mac: macAddress, access: pause ? 'deny' : 'allow'),
-          ],
+        requestBody: ConfigurePayload.forClientPause(
+          macAddress: macAddress,
+          pause: pause,
         ),
       );
       if (result['Code'] != null) {
