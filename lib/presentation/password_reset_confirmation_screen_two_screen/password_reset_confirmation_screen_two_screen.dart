@@ -1,6 +1,7 @@
 import 'package:family_wifi/core/network/api_helper.dart';
 import 'package:family_wifi/core/utils/alert_state_provider.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
+import 'package:family_wifi/l10n/app_localization_extension.dart';
 import 'package:family_wifi/main.dart';
 import 'package:family_wifi/presentation/sign_up_screen/repository/sign_up_repository.dart';
 import 'package:family_wifi/widgets/style_helper.dart';
@@ -177,15 +178,21 @@ class _PasswordResetConfirmationScreenTwoState
             width: double.infinity,
             margin: EdgeInsets.only(bottom: 12.h),
           ),
-          CustomButton(
-            text: 'Resend',
-            onPressed: provider.onResendPressed,
-            backgroundColor: appTheme.blue_gray_900,
-            textColor: appTheme.white_A700,
-            fontSize: 16.fSize,
-            fontWeight: FontWeight.w700,
-            width: double.infinity,
-            margin: EdgeInsets.only(bottom: 12.h),
+          FutureBuilder<String>(
+            future: 'resend_button'.tr(),
+            initialData: '',
+            builder: (context, snapshot) {
+              return CustomButton(
+                text: snapshot.data ?? '',
+                onPressed: provider.onResendPressed,
+                backgroundColor: appTheme.blue_gray_900,
+                textColor: appTheme.white_A700,
+                fontSize: 16.fSize,
+                fontWeight: FontWeight.w700,
+                width: double.infinity,
+                margin: EdgeInsets.only(bottom: 12.h),
+              );
+            },
           ),
         ],
       ),

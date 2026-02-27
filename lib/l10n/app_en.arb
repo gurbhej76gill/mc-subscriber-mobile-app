@@ -33,5 +33,8 @@
   "pause_action": "Pause",
   "resume_device_success": "Device resumed successfully",
   "resume_device_error": "Failed to resume device",
-  "resume_action": "Resume"
+  "resume_action": "Resume",
+  "resend_button": "Resend",
+  "resend_email_missing": "Email address is missing.",
+  "resend_email_sent": "Resend email sent. Please check your inbox or spam folder."
 }

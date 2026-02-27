@@ -61,7 +61,7 @@ class PasswordResetConfirmationScreenTwoProvider with BaseBloc {
 
   Future<void> onResendPressed() async {
     if (_signUpModel.email == null || _signUpModel.email!.trim().isEmpty) {
-      showAlert('Email address is missing.');
+      showAlert(await 'resend_email_missing'.tr());
       return;
     }
 
@@ -72,9 +72,7 @@ class PasswordResetConfirmationScreenTwoProvider with BaseBloc {
       );
       dismissLoading();
       if (result.isSuccess) {
-        showAlert(
-          'Resend email sent. Please check your inbox or spam folder.',
-        );
+        showAlert(await 'resend_email_sent'.tr());
       } else {
         showAlert(result.message, title: await 'signup_failed'.tr());
       }
