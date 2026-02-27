@@ -4,8 +4,8 @@ import 'package:family_wifi/core/network/result.dart';
 import 'package:family_wifi/core/utils/alert_state_provider.dart';
 import 'package:family_wifi/core/utils/base_bloc.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
-import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/core/utils/streamer.dart';
+import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/l10n/app_localization_extension.dart';
 import 'package:family_wifi/presentation/device_management_screen/models/router_device_info_model.dart';
 import 'package:family_wifi/presentation/device_management_screen/repository/device_management_repository.dart';
@@ -33,39 +33,43 @@ class DeviceManagementProvider with BaseBloc {
   List<RouterDeviceInfoModel>? get routerDevicesInitialData =>
       _routerDevices.valueOrNull;
 
-  DeviceManagementRepository? repository;
+  late final DeviceManagementRepository _repository;
 
   DeviceManagementProvider.withNode({this.selectedNodeSerial});
 
   DeviceManagementProvider(
     LoadingStateProvider loadingStateProvider,
-    AlertStateProvider alertStateProvider, {
+    AlertStateProvider alertStateProvider,
+    DeviceManagementRepository repository, {
     this.selectedNodeSerial,
-    this.repository,
-  }) {
+  }) : _repository = repository {
     initialize(loadingStateProvider, alertStateProvider);
   }
 
   void handleTopologyInfo(TopologyInfo? topologyInfo) {
-    if (topologyInfo != null && (topologyInfo.nodes?.isNotEmpty ?? false)) {
-      List<Node> topologyNodes = topologyInfo.nodes!;
+    if (topologyInfo != null &&
+        ((topologyInfo.nodes?.isNotEmpty ?? false) ||
+            (topologyInfo.historicalClients?.isNotEmpty ?? false))) {
+      List<Node> topologyNodes = topologyInfo.nodes ?? [];
       if (selectedNodeSerial?.isNotEmpty ?? false) {
         topologyNodes = topologyNodes
             .where((tpNode) => tpNode.serial == selectedNodeSerial)
             .toList();
       }
-      _mobileDevices.value = topologyNodes
+      List<MobileDeviceInfoModel> mobileDevices = topologyNodes
           .map((tpNode) {
             if (selectedNodeSerial == null ||
                 selectedNodeSerial == tpNode.serial) {
               return tpNode.aps?.map((apNode) {
                 return apNode.clients?.map((clientNode) {
                   return MobileDeviceInfoModel(
-                    id: '4',
-                    deviceName: clientNode.station ?? 'NA',
-                    uploadSpeed: '${clientNode.txRateBitrate.bpsToMbps} Mbps ↑',
-                    downloadSpeed:
-                        '${clientNode.rxRateBitrate.bpsToMbps} Mbps ↓',
+                    macAddress: clientNode.station ?? 'NA',
+                    deviceName: (clientNode.fingerprint?.isNotEmpty ?? false)
+                        ? clientNode.fingerprint!
+                        : clientNode.station ?? 'NA',
+                    uploadSpeed: '${clientNode.txSpeed} Mbps ↑',
+                    downloadSpeed: '${clientNode.rxSpeed} Mbps ↓',
+                    isPaused: clientNode.isBlocked,
                   );
                 });
               });
@@ -73,6 +77,27 @@ class DeviceManagementProvider with BaseBloc {
           })
           .deepFlatten<MobileDeviceInfoModel>()
           .toList();
+
+      if (topologyInfo.historicalClients?.isNotEmpty ?? false) {
+        List<MobileDeviceInfoModel> historicalDevices = topologyInfo
+            .historicalClients!
+            .map(
+              (clientNode) => MobileDeviceInfoModel(
+                macAddress: clientNode.station ?? 'NA',
+                deviceName: (clientNode.fingerprint?.isNotEmpty ?? false)
+                    ? clientNode.fingerprint!
+                    : clientNode.station ?? 'NA',
+                uploadSpeed: '${clientNode.txSpeed} Mbps ↑',
+                downloadSpeed: '${clientNode.rxSpeed} Mbps ↓',
+                isPaused: clientNode.isBlocked,
+                isHistoricalDevice: true,
+              ),
+            )
+            .toList();
+        mobileDevices.addAll(historicalDevices);
+      }
+
+      _mobileDevices.value = mobileDevices;
 
       // _mobileDevices.value = List.from(
       //   _mobileDevices.value..addAll(List.from(_mobileDevices.value)),
@@ -92,11 +117,11 @@ class DeviceManagementProvider with BaseBloc {
           deviceName: tpNode.serial ?? 'NA',
           deviceUptime: tpNode.uptime.formatSeconds,
           actionButtonText:
-              '$noOfClients ${noOfClients > 1
-                  ? 'Devices'
+              '${noOfClients > 1
+                  ? '$noOfClients Devices'
                   : noOfClients == 1
-                  ? 'Device'
-                  : null}',
+                  ? '1 Device'
+                  : 'No Devices'}',
         );
       }).toList();
     } else {
@@ -109,16 +134,78 @@ class DeviceManagementProvider with BaseBloc {
     }
   }
 
-  void toggleDevicePause(MobileDeviceInfoModel device) {
-    // int index = _mobileDevicesStreamer.value.indexWhere(
-    //   (d) => d.id == device.id,
-    // );
-    // if (index != -1) {
-    //   _mobileDevicesStreamer.value[index] = _mobileDevicesStreamer.value[index]
-    //       .copyWith(
-    //         isPaused: !(_mobileDevicesStreamer.value[index].isPaused ?? false),
-    //       );
-    // }
+  Future<ToggleDevicePauseOutcome> toggleDevicePause(
+    MobileDeviceInfoModel device,
+  ) async {
+    final wasPaused = device.isPaused;
+    _updateMobileDevice(
+      device.macAddress,
+      device.copyWith(isPauseResumeInProgress: true),
+    );
+
+    try {
+      Result result = await _repository.pauseResumeDevice(
+        device.macAddress,
+        !wasPaused,
+      );
+
+      if (result.isSuccess) {
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(
+            isPauseResumeInProgress: false,
+            isPaused: !wasPaused,
+          ),
+        );
+        return ToggleDevicePauseOutcome.success(
+          messageKey:
+              wasPaused ? 'resume_device_success' : 'pause_device_success',
+          isPaused: !wasPaused,
+        );
+      } else if (result.sessionExpired) {
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(isPauseResumeInProgress: false),
+        );
+        return const ToggleDevicePauseOutcome.sessionExpired();
+      } else {
+        _updateMobileDevice(
+          device.macAddress,
+          device.copyWith(isPauseResumeInProgress: false),
+        );
+        return ToggleDevicePauseOutcome.error(
+          message: result.message?.toString(),
+          messageKey:
+              wasPaused ? 'resume_device_error' : 'pause_device_error',
+        );
+      }
+    } catch (error) {
+      _updateMobileDevice(
+        device.macAddress,
+        device.copyWith(isPauseResumeInProgress: false),
+      );
+
+      // Handle error
+      print('Toggle Device Pause error: $error');
+      return const ToggleDevicePauseOutcome.error(
+        messageKey: 'failed',
+        titleKey: 'something_went_wrong',
+      );
+    }
+  }
+
+  void _updateMobileDevice(String macAddress, MobileDeviceInfoModel updated) {
+    if (!_mobileDevices.hasValue || _mobileDevices.value == null) {
+      return;
+    }
+    final current = _mobileDevices.value;
+    final index = current.indexWhere((item) => item.macAddress == macAddress);
+    if (index == -1) {
+      return;
+    }
+    final next = List<MobileDeviceInfoModel>.of(current);
+    next[index] = updated;
+    _mobileDevices.value = next;
   }
 
   Future<bool> handleRouterMeshDelete(int indexToDelete) async {
@@ -154,7 +241,7 @@ class DeviceManagementProvider with BaseBloc {
           .replaceAll(specialChars, '')
           .toLowerCase();
 
-      Result result = await repository!.deleteDevice(macAddressFormatted);
+      Result result = await _repository.deleteDevice(macAddressFormatted);
       dismissLoading();
 
       if (result.isSuccess) {
@@ -177,6 +264,51 @@ class DeviceManagementProvider with BaseBloc {
     _mobileDevices.close();
     _routerDevices.close();
   }
+}
+
+enum ToggleDevicePauseStatus { success, error, sessionExpired }
+
+class ToggleDevicePauseOutcome {
+  final ToggleDevicePauseStatus status;
+  final String? messageKey;
+  final String? titleKey;
+  final String? message;
+  final bool? isPaused;
+
+  const ToggleDevicePauseOutcome._({
+    required this.status,
+    this.messageKey,
+    this.titleKey,
+    this.message,
+    this.isPaused,
+  });
+
+  const ToggleDevicePauseOutcome.sessionExpired()
+      : this._(status: ToggleDevicePauseStatus.sessionExpired);
+
+  const ToggleDevicePauseOutcome.success({
+    required String messageKey,
+    bool? isPaused,
+  }) : this._(
+          status: ToggleDevicePauseStatus.success,
+          messageKey: messageKey,
+          isPaused: isPaused,
+        );
+
+  const ToggleDevicePauseOutcome.error({
+    String? message,
+    String? messageKey,
+    String? titleKey,
+  }) : this._(
+          status: ToggleDevicePauseStatus.error,
+          message: message,
+          messageKey: messageKey,
+          titleKey: titleKey,
+        );
+
+  bool get isSuccess => status == ToggleDevicePauseStatus.success;
+  bool get isError => status == ToggleDevicePauseStatus.error;
+  bool get isSessionExpired => status == ToggleDevicePauseStatus.sessionExpired;
 }
 
 extension IterableExtension on Iterable {

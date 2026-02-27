@@ -6,9 +6,15 @@ class TopologyInfo {
   String? boardId;
   Edges? edges;
   List<Node>? nodes;
+  List<Client>? historicalClients;
   DateTime? timestamp;
 
-  TopologyInfo({this.boardId, this.nodes, this.timestamp});
+  TopologyInfo({
+    this.boardId,
+    this.nodes,
+    this.historicalClients,
+    this.timestamp,
+  });
 
   factory TopologyInfo.fromJson(Map<String, dynamic> json) =>
       _$TopologyInfoFromJson(json);
@@ -88,6 +94,13 @@ class Client {
   String? station;
   @JsonKey(name: 'tx_rate_bitrate')
   int? txRateBitrate;
+  String? fingerprint;
+  @JsonKey(name: 'rx_speed', defaultValue: 0)
+  final double rxSpeed;
+  @JsonKey(name: 'tx_speed', defaultValue: 0)
+  final double txSpeed;
+  @JsonKey(name: 'blocked')
+  Object? blockedRaw;
 
   Client({
     this.connected,
@@ -97,7 +110,32 @@ class Client {
     this.rxRateChwidth,
     this.station,
     this.txRateBitrate,
+    this.fingerprint,
+    this.rxSpeed = 0,
+    this.txSpeed = 0,
+    this.blockedRaw,
   });
+
+  bool get isBlocked => _parseBlocked(blockedRaw);
+
+  static bool _parseBlocked(Object? value) {
+    if (value == null) {
+      return false;
+    }
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == '1' ||
+          normalized == 'true' ||
+          normalized == 'yes';
+    }
+    return false;
+  }
 
   factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
   Map<String, dynamic> toJson() => _$ClientToJson(this);
