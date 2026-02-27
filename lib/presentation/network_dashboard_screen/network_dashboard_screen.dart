@@ -112,18 +112,15 @@ class _NetworkDashboardScreenState extends State<NetworkDashboardScreen>
   }
 
   Widget _buildTabContent() {
-    return ValueListenableProvider.value(
-      value: context.read<HomeProvider>().subscriberInfo,
-      child: TabBarView(
-        controller: _tabController,
-        children: [
-          DashboardOverviewTab(),
-          ChangeNotifierProvider(
-            create: (context) => NetworkHealthProvider(),
-            child: NetworkHealthScreenInitialPage(),
-          ),
-        ],
-      ),
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        DashboardOverviewTab(),
+        ChangeNotifierProvider(
+          create: (context) => NetworkHealthProvider(),
+          child: NetworkHealthScreenInitialPage(),
+        ),
+      ],
     );
   }
 }

@@ -6,7 +6,6 @@ import 'package:family_wifi/core/network/api_helper.dart';
 import 'package:family_wifi/core/network/result.dart';
 import 'package:family_wifi/core/utils/print_log_helper.dart';
 import 'package:family_wifi/l10n/app_localization_extension.dart';
-import 'package:family_wifi/presentation/home_screen/models/subscriber_info.dart';
 import 'package:family_wifi/presentation/home_screen/models/topology_info.dart';
 
 class HomeRepository {
@@ -14,20 +13,6 @@ class HomeRepository {
 
   HomeRepository(ApiHelper apiHelper) {
     this._apiHelper = apiHelper;
-  }
-
-  Future<Result> subscriber() async {
-    try {
-      Map<String, dynamic> result = await _apiHelper.request(
-        ApiConstants.subscriber,
-        requestType: RequestType.GET,
-      );
-      SubscriberInfo subscriberInfo = SubscriberInfo.fromJson(result);
-      return Result.success(subscriberInfo);
-    } catch (error, stack) {
-      logPrint('$error, \n$stack');
-      return handleApiException(error);
-    }
   }
 
   Future<Result> topology() async {

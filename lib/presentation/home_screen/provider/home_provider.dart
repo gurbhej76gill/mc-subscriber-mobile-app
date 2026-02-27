@@ -5,7 +5,6 @@ import 'package:family_wifi/core/utils/loading_state_provider.dart';
 import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/l10n/app_localization_extension.dart';
 import 'package:family_wifi/presentation/home_screen/bottom_bar_item.dart';
-import 'package:family_wifi/presentation/home_screen/models/subscriber_info.dart';
 import 'package:family_wifi/presentation/home_screen/models/topology_info.dart';
 import 'package:family_wifi/presentation/home_screen/repository/home_repository.dart';
 import 'package:family_wifi/routes/app_routes.dart';
@@ -17,9 +16,6 @@ class HomeProvider with BaseBloc {
 
   final ValueNotifier<BottomBarItem> selectedNavBarItem =
       ValueNotifier<BottomBarItem>(NAV_BOTTOM_BAR_ITEMS[0]);
-
-  final ValueNotifier<SubscriberInfo?> subscriberInfo =
-      ValueNotifier<SubscriberInfo?>(null);
 
   final ValueNotifier<TopologyInfo?> topologyInfo =
       ValueNotifier<TopologyInfo?>(null);
@@ -47,7 +43,6 @@ class HomeProvider with BaseBloc {
   void dispose() {
     pageController.dispose();
     selectedNavBarItem.dispose();
-    subscriberInfo.dispose();
     super.dispose();
   }
 
@@ -57,10 +52,6 @@ class HomeProvider with BaseBloc {
 
   Future<void> fetchLatestData({bool showPopupLoader = true}) async {
     await fetchTopologyInfo();
-  }
-
-  Future<void> initialSubscribe({bool showPopupLoader = true}) async {
-    return;
   }
 
   Future<void> fetchTopologyInfo() async {

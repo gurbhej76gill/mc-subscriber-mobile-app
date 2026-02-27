@@ -3,7 +3,6 @@ import 'package:family_wifi/core/network/api_helper.dart';
 import 'package:family_wifi/presentation/device_management_screen/provider/device_management_provider.dart';
 import 'package:family_wifi/presentation/device_management_screen/repository/device_management_repository.dart';
 import 'package:family_wifi/presentation/device_management_screen/widgets/mobile_devices_tab.dart';
-import 'package:family_wifi/presentation/home_screen/models/subscriber_info.dart';
 import 'package:family_wifi/presentation/home_screen/models/topology_info.dart'
     hide Node;
 import 'package:family_wifi/presentation/home_screen/provider/home_provider.dart';
@@ -158,35 +157,37 @@ class _DashboardOverviewTabState extends State<DashboardOverviewTab>
   }
 
   Widget _buildNetworkSections() {
-    return Consumer<SubscriberInfo?>(
-      builder:
-          (
-            BuildContext context,
-            SubscriberInfo? subscriberInfo,
-            Widget? child,
-          ) {
-            return Column(
-              children: [
-                _buildPrivateNetworkSection(
-                  subscriberInfo?.privateWiFiMacAddress,
-                  subscriberInfo?.privateWiFiSSID,
+    final topology = context.watch<TopologyInfo?>();
+    AccessPoint? accessPoint;
+    final nodes = topology?.nodes;
+    if (nodes != null) {
+      for (final node in nodes) {
+        final aps = node.aps;
+        if (aps != null && aps.isNotEmpty) {
+          accessPoint = aps.first;
+          break;
+        }
+      }
+    }
+    return Column(
+      children: [
+        _buildPrivateNetworkSection(
+          accessPoint?.bssid,
+          accessPoint?.ssid,
+        ),
+        _buildGuestNetworkSection(),
+        _buildMobileDeviceInfoSection(),
+        Column(
+          children: dashboardController.networkItems
+              .map(
+                (item) => GestureDetector(
+                  onTap: item.onTap,
+                  child: NetworkItemWidget(networkItem: item),
                 ),
-                _buildGuestNetworkSection(),
-                _buildMobileDeviceInfoSection(),
-                child!,
-              ],
-            );
-          },
-      child: Column(
-        children: dashboardController.networkItems
-            .map(
-              (item) => GestureDetector(
-                onTap: item.onTap,
-                child: NetworkItemWidget(networkItem: item),
-              ),
-            )
-            .toList(),
-      ),
+              )
+              .toList(),
+        ),
+      ],
     );
   }
 
