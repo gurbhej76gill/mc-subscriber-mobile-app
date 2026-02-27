@@ -11,17 +11,33 @@ import 'package:provider/single_child_widget.dart';
 import 'core/app_export.dart';
 
 var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-  Future.wait([
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-  ]).then((value) {
-    runApp(MyApp());
-  });
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  final sharedPreferencesHelper = SharedPreferencesHelper();
+  final apiHelper = ApiHelper();
+  await apiHelper.loadCustomHost(sharedPreferencesHelper);
+
+  runApp(
+    MyApp(
+      sharedPreferencesHelper: sharedPreferencesHelper,
+      apiHelper: apiHelper,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
+  final SharedPreferencesHelper sharedPreferencesHelper;
+  final ApiHelper apiHelper;
+
+  const MyApp({
+    super.key,
+    required this.sharedPreferencesHelper,
+    required this.apiHelper,
+  });
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -60,8 +76,8 @@ class MyApp extends StatelessWidget {
 
   List<SingleChildWidget> _buildProviders() {
     return [
-      Provider<ApiHelper>(create: (_) => ApiHelper()),
-      Provider(create: (_) => SharedPreferencesHelper()),
+      Provider.value(value: sharedPreferencesHelper),
+      Provider.value(value: apiHelper),
     ];
   }
 

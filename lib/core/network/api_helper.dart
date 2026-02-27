@@ -6,28 +6,57 @@ import 'package:family_wifi/core/network/api_constants.dart';
 import 'package:family_wifi/core/network/api_exception.dart';
 import 'package:family_wifi/core/network/persistent_io_client.dart';
 import 'package:family_wifi/core/utils/print_log_helper.dart';
+import 'package:family_wifi/core/utils/shared_preferences_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class ApiHelper {
-  late final String _host, _portAuth, _portDefault, _suffix;
+  late final String _hostDefault, _portAuth, _portDefault, _suffix;
+  String? _hostOverride;
+  String? _portOverride;
   Map<String, String> get _headers => {'Content-Type': 'application/json'};
 
   late final PersistentIoClient client;
 
   ApiHelper() {
     if (ApiConstants.developmentMode) {
-      _host = ApiConstants.baseUrlDev;
+      _hostDefault = ApiConstants.baseUrlDev;
       _suffix = ApiConstants.suffixDev;
       _portAuth = ApiConstants.authPortDev;
       _portDefault = ApiConstants.defaultPortDev;
     } else {
-      _host = ApiConstants.baseUrl;
+      _hostDefault = ApiConstants.baseUrl;
       _suffix = ApiConstants.suffix;
       _portAuth = ApiConstants.authPort;
       _portDefault = ApiConstants.defaultPort;
     }
     initClient();
+  }
+
+  String get host => _hostOverride?.isNotEmpty == true ? _hostOverride! : _hostDefault;
+  String? get portOverride => _portOverride;
+  void setCustomHost(String? host) {
+    final trimmed = host?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      _hostOverride = null;
+      _portOverride = null;
+      return;
+    }
+
+    final parts = trimmed.split(':');
+    if (parts.length == 2) {
+      _hostOverride = parts[0];
+      _portOverride = parts[1];
+      return;
+    }
+
+    _hostOverride = trimmed;
+    _portOverride = null;
+  }
+
+  Future<void> loadCustomHost(SharedPreferencesHelper preferencesHelper) async {
+    final stored = await preferencesHelper.customServerUrl;
+    setCustomHost(stored);
   }
 
   void initClient() {
@@ -60,8 +89,13 @@ class ApiHelper {
     if (!await check()) {
       throw ApiException('out_of_coverage', isOutOfCoverage: true);
     }
-    String hostName = _host;
-    if (path == ApiConstants.login) {
+    String hostName = host;
+    final overridePort = portOverride;
+    if (path == ApiConstants.signup &&
+        overridePort != null &&
+        overridePort.isNotEmpty) {
+      hostName += ':$overridePort';
+    } else if (path == ApiConstants.login) {
       hostName += ':${_portAuth}';
     } else {
       hostName += ':${_portDefault}';
