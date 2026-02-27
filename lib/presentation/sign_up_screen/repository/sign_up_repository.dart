@@ -24,7 +24,8 @@ class SignUpRepository {
         'registrationId': signUpModel.operatorId,
       };
       if (resend) {
-        parameters['resend'] = true;
+        // Backend expects resend flag as string "true".
+        parameters['resend'] = 'true';
       }
       Map<String, dynamic> result = await _apiHelper.request(
         ApiConstants.subscriber,
