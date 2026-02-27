@@ -67,9 +67,8 @@ class PasswordResetConfirmationScreenTwoProvider with BaseBloc {
 
     startLoading();
     try {
-      Result result = await _signUpRepository.createAccount(
+      Result result = await _signUpRepository.requestVerificationEmailResend(
         _signUpModel,
-        resend: true,
       );
       dismissLoading();
       if (result.isSuccess) {

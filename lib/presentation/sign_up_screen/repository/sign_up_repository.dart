@@ -24,7 +24,7 @@ class SignUpRepository {
         'registrationId': signUpModel.operatorId,
       };
       if (resend) {
-        parameters['resend'] = 'true';
+        parameters['resend'] = true;
       }
       Map<String, dynamic> result = await _apiHelper.request(
         ApiConstants.subscriber,
@@ -41,6 +41,10 @@ class SignUpRepository {
       logPrint('$error, \n$stack');
       return handleApiException(error);
     }
+  }
+
+  Future<Result> requestVerificationEmailResend(SignUpModel signUpModel) async {
+    return createAccount(signUpModel, resend: true);
   }
 
   Future<Result> handleApiException(dynamic exception) async {
