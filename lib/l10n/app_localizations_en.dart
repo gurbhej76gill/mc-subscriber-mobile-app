@@ -117,4 +117,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resume_action => 'Resume';
+
+  @override
+  String get resend_button => 'Resend';
+
+  @override
+  String get resend_email_missing => 'Email address is missing.';
+
+  @override
+  String get resend_email_sent =>
+      'Resend email sent. Please check your inbox or spam folder.';
 }

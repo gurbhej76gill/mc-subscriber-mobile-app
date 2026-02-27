@@ -303,6 +303,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume'**
   String get resume_action;
+
+  /// No description provided for @resend_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get resend_button;
+
+  /// No description provided for @resend_email_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address is missing.'**
+  String get resend_email_missing;
+
+  /// No description provided for @resend_email_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email sent. Please check your inbox or spam folder.'**
+  String get resend_email_sent;
 }
 
 class _AppLocalizationsDelegate
