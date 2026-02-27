@@ -208,6 +208,12 @@ abstract class AppLocalizations {
   /// **'Topology Request Failed'**
   String get topology_request_failed;
 
+  /// No description provided for @no_devices_activated_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices activated yet.'**
+  String get no_devices_activated_yet;
+
   /// No description provided for @edit_network_success.
   ///
   /// In en, this message translates to:
@@ -274,6 +280,12 @@ abstract class AppLocalizations {
   /// **'Failed to pause device'**
   String get pause_device_error;
 
+  /// No description provided for @pause_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause_action;
+
   /// No description provided for @resume_device_success.
   ///
   /// In en, this message translates to:
@@ -285,6 +297,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to resume device'**
   String get resume_device_error;
+
+  /// No description provided for @resume_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume_action;
 }
 
 class _AppLocalizationsDelegate
