@@ -70,6 +70,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topology_request_failed => 'Topology Request Failed';
 
   @override
+  String get no_devices_activated_yet => 'No devices activated yet.';
+
+  @override
   String get edit_network_success => 'Network settings saved successfully';
 
   @override
@@ -104,8 +107,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pause_device_error => 'Failed to pause device';
 
   @override
+  String get pause_action => 'Pause';
+
+  @override
   String get resume_device_success => 'Device resumed successfully';
 
   @override
   String get resume_device_error => 'Failed to resume device';
+
+  @override
+  String get resume_action => 'Resume';
+
+  @override
+  String get resend_button => 'Resend';
+
+  @override
+  String get resend_email_missing => 'Email address is missing.';
+
+  @override
+  String get resend_email_sent =>
+      'Resend email sent. Please check your inbox or spam folder.';
 }

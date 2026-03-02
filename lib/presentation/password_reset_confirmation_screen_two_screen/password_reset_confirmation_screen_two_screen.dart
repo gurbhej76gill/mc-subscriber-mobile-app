@@ -1,6 +1,9 @@
+import 'package:family_wifi/core/network/api_helper.dart';
 import 'package:family_wifi/core/utils/alert_state_provider.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
+import 'package:family_wifi/l10n/app_localization_extension.dart';
 import 'package:family_wifi/main.dart';
+import 'package:family_wifi/presentation/sign_up_screen/repository/sign_up_repository.dart';
 import 'package:family_wifi/widgets/style_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:open_mail_app_plus/open_mail_app_plus.dart';
@@ -14,21 +17,41 @@ class PasswordResetConfirmationScreenTwo extends StatefulWidget {
   const PasswordResetConfirmationScreenTwo({Key? key}) : super(key: key);
 
   static Widget builder(BuildContext context) {
+    final input =
+        (ModalRoute.of(context)?.settings.arguments as Map?) ??
+        <String, dynamic>{};
     return MyApp.buildLoadingAlertProviders(
       child:
-          ProxyProvider2<
-            LoadingStateProvider,
-            AlertStateProvider,
-            PasswordResetConfirmationScreenTwoProvider
-          >(
-            update: (_, loadingState, alertState, pwdResetProvider) {
-              return pwdResetProvider ??
-                  PasswordResetConfirmationScreenTwoProvider(
-                    loadingState,
-                    alertState,
-                  );
+          ProxyProvider<ApiHelper, SignUpRepository>(
+            update: (_, apiHelper, signUpRepo) {
+              return signUpRepo ?? SignUpRepository(apiHelper);
             },
-            child: const PasswordResetConfirmationScreenTwo(),
+            child:
+                ProxyProvider3<
+                  LoadingStateProvider,
+                  AlertStateProvider,
+                  SignUpRepository,
+                  PasswordResetConfirmationScreenTwoProvider
+                >(
+                  update:
+                      (
+                        _,
+                        loadingState,
+                        alertState,
+                        signUpRepo,
+                        pwdResetProvider,
+                      ) {
+                        return pwdResetProvider ??
+                            PasswordResetConfirmationScreenTwoProvider(
+                              loadingState,
+                              alertState,
+                              signUpRepo,
+                              input['email'],
+                              input['registrationId'],
+                            );
+                      },
+                  child: const PasswordResetConfirmationScreenTwo(),
+                ),
           ),
     );
   }
@@ -154,6 +177,22 @@ class _PasswordResetConfirmationScreenTwoState
             fontWeight: FontWeight.w700,
             width: double.infinity,
             margin: EdgeInsets.only(bottom: 12.h),
+          ),
+          FutureBuilder<String>(
+            future: 'resend_button'.tr(),
+            initialData: '',
+            builder: (context, snapshot) {
+              return CustomButton(
+                text: snapshot.data ?? '',
+                onPressed: provider.onResendPressed,
+                backgroundColor: appTheme.blue_gray_900,
+                textColor: appTheme.white_A700,
+                fontSize: 16.fSize,
+                fontWeight: FontWeight.w700,
+                width: double.infinity,
+                margin: EdgeInsets.only(bottom: 12.h),
+              );
+            },
           ),
         ],
       ),

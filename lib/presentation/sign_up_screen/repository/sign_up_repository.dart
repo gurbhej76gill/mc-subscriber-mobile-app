@@ -16,16 +16,21 @@ class SignUpRepository {
     this._apiHelper = apiHelper;
   }
 
-  Future<Result> createAccount(SignUpModel signUpModel) async {
+  Future<Result> createAccount(SignUpModel signUpModel, {bool resend = false})
+      async {
     try {
+      final parameters = <String, dynamic>{
+        'email': signUpModel.email,
+        'registrationId': signUpModel.operatorId,
+      };
+      if (resend) {
+        // Backend expects resend flag as string "true".
+        parameters['resend'] = 'true';
+      }
       Map<String, dynamic> result = await _apiHelper.request(
-        ApiConstants.signup,
+        ApiConstants.subscriber,
         requestType: RequestType.POST,
-        parameters: {
-          'email': signUpModel.email,
-          'macAddress': signUpModel.macAddress,
-          'registrationId': signUpModel.operatorId,
-        },
+        parameters: parameters,
       );
       SignUpResult signUpResult = SignUpResult.fromJson(result);
       if (signUpResult.userId != null) {
@@ -37,6 +42,10 @@ class SignUpRepository {
       logPrint('$error, \n$stack');
       return handleApiException(error);
     }
+  }
+
+  Future<Result> requestVerificationEmailResend(SignUpModel signUpModel) async {
+    return createAccount(signUpModel, resend: true);
   }
 
   Future<Result> handleApiException(dynamic exception) async {

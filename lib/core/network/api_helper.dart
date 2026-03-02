@@ -91,7 +91,7 @@ class ApiHelper {
     }
     String hostName = host;
     final overridePort = portOverride;
-    if (path == ApiConstants.signup &&
+    if (path == ApiConstants.subscriber &&
         overridePort != null &&
         overridePort.isNotEmpty) {
       hostName += ':$overridePort';

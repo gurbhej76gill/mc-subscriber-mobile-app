@@ -3,6 +3,9 @@ import 'package:family_wifi/core/utils/base_bloc.dart';
 import 'package:family_wifi/core/utils/loading_state_provider.dart';
 import 'package:family_wifi/core/utils/navigator_service.dart';
 import 'package:family_wifi/l10n/app_localization_extension.dart';
+import 'package:family_wifi/core/network/result.dart';
+import 'package:family_wifi/presentation/sign_up_screen/models/sign_up_model.dart';
+import 'package:family_wifi/presentation/sign_up_screen/repository/sign_up_repository.dart';
 import 'package:family_wifi/routes/app_routes.dart';
 import 'package:open_mail_app_plus/open_mail_app_plus.dart';
 
@@ -13,12 +16,19 @@ class PasswordResetConfirmationScreenTwoProvider with BaseBloc {
   ) {
     initialize(loadingStateProvider, alertStateProvider);
   }
+  late final SignUpRepository _signUpRepository;
+  final SignUpModel _signUpModel = SignUpModel();
 
   PasswordResetConfirmationScreenTwoProvider(
     LoadingStateProvider loadingStateProvider,
     AlertStateProvider alertStateProvider,
+    this._signUpRepository,
+    String? email,
+    String? registrationId,
   ) {
     initialize(loadingStateProvider, alertStateProvider);
+    _signUpModel.email = email ?? '';
+    _signUpModel.operatorId = registrationId ?? '';
   }
 
   Future<List<MailApp>?> onOpenEmailApp() async {
@@ -47,6 +57,29 @@ class PasswordResetConfirmationScreenTwoProvider with BaseBloc {
     }
 
     return null;
+  }
+
+  Future<void> onResendPressed() async {
+    if (_signUpModel.email == null || _signUpModel.email!.trim().isEmpty) {
+      showAlert(await 'resend_email_missing'.tr());
+      return;
+    }
+
+    startLoading();
+    try {
+      Result result = await _signUpRepository.requestVerificationEmailResend(
+        _signUpModel,
+      );
+      dismissLoading();
+      if (result.isSuccess) {
+        showAlert(await 'resend_email_sent'.tr());
+      } else {
+        showAlert(result.message, title: await 'signup_failed'.tr());
+      }
+    } catch (error) {
+      dismissLoading();
+      showAlert(await 'something_went_wrong'.tr());
+    }
   }
 
   @override
